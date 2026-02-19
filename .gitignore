@@ -1,0 +1,79 @@
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv/
+
+# Python build
+build/
+dist/
+*.egg-info/
+
+# -------------------------
+# Environment Variables
+# -------------------------
+.env
+.env.*
+
+# -------------------------
+# Jupyter / temp files
+# -------------------------
+.ipynb_checkpoints/
+
+# -------------------------
+# IDE / Editor
+# -------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# -------------------------
+# OS Files
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Logs
+# -------------------------
+*.log
+
+# -------------------------
+# ChromaDB (IMPORTANT)
+# -------------------------
+chroma_db/
+
+# (Optional: remove this line if you WANT to push DB to repo)
+
+# -------------------------
+# Ollama / Model artifacts
+# -------------------------
+*.bin
+*.gguf
+*.model
+
+# -------------------------
+# Large data files
+# -------------------------
+*.sqlite3
+*.db
+
+# -------------------------
+# Streamlit cache
+# -------------------------
+.streamlit/
+
+# -------------------------
+# Temporary files
+# -------------------------
+tmp/
+temp/
+*.tmp
