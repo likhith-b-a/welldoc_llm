@@ -1,4 +1,4 @@
-# Welldoc AI Assistant — Hybrid RAG System (Local LLM)
+# QueryDocs AI — Hybrid RAG System (Local LLM)
 
 A  Retrieval-Augmented Generation (RAG) AI assistant built using local LLMs, semantic search, hybrid retrieval, and explainable answer generation.
 
