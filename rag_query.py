@@ -27,7 +27,7 @@ def rerank_chunks(query, documents, metadatas):
 
     scored_chunks = []
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
 
     for i in range(len(documents)):
 
@@ -141,7 +141,7 @@ Question:
 Answer:
 """
 
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt)
 
     print("\n===== ANSWER =====\n")

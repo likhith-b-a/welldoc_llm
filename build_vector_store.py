@@ -2,7 +2,7 @@ from extract_pdf import extract_pages
 from chunking import semantic_chunk
 from embedding import store_chunks
 
-FAQ_FOLDER = "FAQ"
+FAQ_FOLDER = "faq"
 
 print("Extracting...")
 pages = extract_pages(FAQ_FOLDER)

@@ -70,6 +70,7 @@ Thumbs.db
 # Streamlit cache
 # -------------------------
 # .streamlit/ (Commented out so config.toml gets pushed)
+.streamlit/secrets.toml
 
 # -------------------------
 # Temporary files
@@ -77,3 +78,9 @@ Thumbs.db
 tmp/
 temp/
 *.tmp
+
+# -------------------------
+# Force-include the prebuilt vector store
+# (overrides *.bin / *.sqlite3 / *.db above so Streamlit Cloud gets it)
+# -------------------------
+!chroma_db/**
