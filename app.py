@@ -3,6 +3,7 @@ import chromadb
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 if "GEMINI_API_KEY" in os.environ:
@@ -13,6 +14,9 @@ else:
             genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     except Exception:
         pass
+
+# Load HuggingFace model
+embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # ------------------------------
 # Connect to ChromaDB
@@ -33,12 +37,7 @@ def keyword_score(query, document):
 # ------------------------------
 def ask_question(query):
 
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=query,
-        task_type="retrieval_query"
-    )
-    query_embedding = result['embedding']
+    query_embedding = embed_model.encode(query).tolist()
 
     results = collection.query(
         query_embeddings=[query_embedding],

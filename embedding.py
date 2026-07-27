@@ -1,19 +1,5 @@
 import chromadb
-import google.generativeai as genai
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-if "GEMINI_API_KEY" in os.environ:
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-else:
-    try:
-        import streamlit as st
-        if "GEMINI_API_KEY" in st.secrets:
-            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    except Exception:
-        pass
-
+from sentence_transformers import SentenceTransformer
 
 client = chromadb.PersistentClient(path="./chroma_db")
 
@@ -21,16 +7,14 @@ collection = client.get_or_create_collection(
     name="welldoc_docs"
 )
 
+# Load HuggingFace model
+model = SentenceTransformer('all-MiniLM-L6-v2')
+
 def store_chunks(chunks):
 
     for i, chunk in enumerate(chunks):
 
-        result = genai.embed_content(
-            model="models/text-embedding-004",
-            content=chunk["text"],
-            task_type="retrieval_document"
-        )
-        embedding = result['embedding']
+        embedding = model.encode(chunk["text"]).tolist()
 
         collection.add(
             ids=[str(i)],

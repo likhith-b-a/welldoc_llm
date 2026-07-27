@@ -2,6 +2,7 @@ import chromadb
 import google.generativeai as genai
 import os
 from dotenv import load_dotenv
+from sentence_transformers import SentenceTransformer
 
 load_dotenv()
 if "GEMINI_API_KEY" in os.environ:
@@ -9,6 +10,8 @@ if "GEMINI_API_KEY" in os.environ:
 
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_collection(name="welldoc_docs")
+
+embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 def keyword_score(query, document):
 
@@ -67,12 +70,7 @@ def ask_question(query):
     print(f"\nUser Query: {query}")
 
     # Step 1 — Embed query
-    result = genai.embed_content(
-        model="models/text-embedding-004",
-        content=query,
-        task_type="retrieval_query"
-    )
-    query_embedding = result['embedding']
+    query_embedding = embed_model.encode(query).tolist()
 
     # Step 2 — Retrieve semantic candidates
     results = collection.query(
