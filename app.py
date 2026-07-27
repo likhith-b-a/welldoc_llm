@@ -91,9 +91,17 @@ Answer:
 # Streamlit UI
 # ------------------------------
 
-st.set_page_config(page_title="Welldoc AI Assistant", layout="wide")
+st.set_page_config(page_title="Welldoc AI Assistant", page_icon="🤖", layout="wide")
 
-st.title("🤖 Welldoc FAQ AI Assistant")
+def inject_css():
+    try:
+        with open("./styles/styles.css") as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except FileNotFoundError:
+        pass
+inject_css()
+
+st.markdown("<h1 class='main-header'>🤖 Welldoc FAQ AI Assistant</h1>", unsafe_allow_html=True)
 st.write("Ask any question based on the uploaded Welldoc documents.")
 
 user_query = st.text_input("Enter your question:")
@@ -107,9 +115,9 @@ if st.button("Ask"):
 
             answer, sources = ask_question(user_query)
 
-        st.subheader("📌 Answer")
-        st.write(answer)
+        st.markdown("<h2 class='sub-header'>📌 Answer</h2>", unsafe_allow_html=True)
+        st.info(answer)
 
-        st.subheader("📚 Sources")
+        st.markdown("<h2 class='sub-header'>📚 Sources</h2>", unsafe_allow_html=True)
         for src in sources:
-            st.write("-", src)
+            st.markdown(f"<div class='card'><span class='source-text'>- {src}</span></div>", unsafe_allow_html=True)
