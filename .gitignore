@@ -49,7 +49,7 @@ Thumbs.db
 # -------------------------
 # ChromaDB (IMPORTANT)
 # -------------------------
-chroma_db/
+# chroma_db/ (Commented out so the DB gets pushed to GitHub for Streamlit Cloud)
 
 # (Optional: remove this line if you WANT to push DB to repo)
 
@@ -69,7 +69,7 @@ chroma_db/
 # -------------------------
 # Streamlit cache
 # -------------------------
-.streamlit/
+# .streamlit/ (Commented out so config.toml gets pushed)
 
 # -------------------------
 # Temporary files
