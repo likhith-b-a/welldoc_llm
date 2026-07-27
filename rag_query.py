@@ -9,7 +9,7 @@ if "GEMINI_API_KEY" in os.environ:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_collection(name="welldoc_docs")
+collection = client.get_collection(name="demo_docs")
 
 embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -121,7 +121,7 @@ def ask_question(query):
 
     # Step 4 — Final Answer Generation
     prompt = f"""
-You are a Welldoc document assistant.
+You are a document assistant.
 
 Answer the question DIRECTLY and specifically.
 Do not include unrelated procedural steps unless explicitly asked.

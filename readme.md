@@ -2,19 +2,21 @@
 
 A Retrieval-Augmented Generation (RAG) AI assistant built using semantic search, hybrid retrieval, and explainable answer generation.
 
-This system allows users to ask natural language questions and receive accurate, source-grounded answers strictly based on provided Welldoc PDF documents.
+This system allows users to ask natural language questions and receive accurate, source-grounded answers strictly based on the provided PDF documents — either a bundled demo FAQ or documents you upload yourself.
 
 ---
 
 ## 🚀 Features
 
 - Cloud-deployable (no local LLM server required)
+- Two modes: a bundled **Demo FAQ** and **My Documents**, where you upload your own PDFs and get answers grounded strictly in what you uploaded
+- Uploaded documents are session-scoped, in-memory only, and never written to disk or shared between users
 - Semantic search using vector embeddings
 - Hybrid search (Semantic + Keyword ranking)
 - Semantic chunking with overlap for better retrieval
 - Source attribution (document + page number)
 - Streamlit GUI for interactive querying
-- Persistent vector database using ChromaDB
+- Persistent vector database using ChromaDB (demo mode) / ephemeral in-memory store (upload mode)
 
 ---
 
@@ -112,6 +114,10 @@ This extracts PDF text, performs semantic chunking, generates embeddings, and st
 ```bash
 streamlit run app.py
 ```
+
+Pick a source at the top of the app:
+- **📁 Demo FAQ** — queries the bundled, prebuilt `chroma_db/`.
+- **📤 My Documents** — upload one or more PDFs, click **Process documents**, and questions are answered strictly from what you uploaded (kept in memory for that browser session only; click **Clear my documents** to reset).
 
 ---
 

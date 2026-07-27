@@ -24,3 +24,23 @@ def extract_pages(folder):
                 })
 
     return pages
+
+
+def extract_pages_from_file(file, filename):
+
+    pages = []
+
+    reader = PdfReader(file)
+
+    for page_num, page in enumerate(reader.pages):
+
+        text = page.extract_text()
+
+        if text and len(text.strip()) > 50:
+            pages.append({
+                "file": filename,
+                "page": page_num + 1,
+                "text": text
+            })
+
+    return pages

@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 client = chromadb.PersistentClient(path="./chroma_db")
 
 collection = client.get_or_create_collection(
-    name="welldoc_docs"
+    name="demo_docs"
 )
 
 # Load HuggingFace model

@@ -5,6 +5,9 @@ import os
 from dotenv import load_dotenv
 from sentence_transformers import SentenceTransformer
 
+from extract_pdf import extract_pages_from_file
+from chunking import semantic_chunk
+
 load_dotenv()
 if "GEMINI_API_KEY" in os.environ:
     genai.configure(api_key=os.environ["GEMINI_API_KEY"])
@@ -19,10 +22,10 @@ else:
 embed_model = SentenceTransformer('all-MiniLM-L6-v2')
 
 # ------------------------------
-# Connect to ChromaDB
+# Connect to the prebuilt demo ChromaDB
 # ------------------------------
-client = chromadb.PersistentClient(path="./chroma_db")
-collection = client.get_collection(name="welldoc_docs")
+demo_client = chromadb.PersistentClient(path="./chroma_db")
+demo_collection = demo_client.get_collection(name="demo_docs")
 
 # ------------------------------
 # Hybrid keyword score
@@ -35,13 +38,14 @@ def keyword_score(query, document):
 # ------------------------------
 # Ask Question Function
 # ------------------------------
-def ask_question(query):
+def ask_question(query, collection):
 
+    n_results = min(10, collection.count())
     query_embedding = embed_model.encode(query).tolist()
 
     results = collection.query(
         query_embeddings=[query_embedding],
-        n_results=10
+        n_results=n_results
     )
 
     documents = results["documents"][0]
@@ -75,7 +79,7 @@ def ask_question(query):
         )
 
     prompt = f"""
-You are a Welldoc document assistant.
+You are a document assistant.
 
 Rules:
 - Answer ONLY from provided context.
@@ -98,12 +102,11 @@ Answer:
     return response.text, list(set(sources))
 
 
-
 # ------------------------------
 # Streamlit UI
 # ------------------------------
 
-st.set_page_config(page_title="Welldoc AI Assistant", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="QueryDocs AI", page_icon="🤖", layout="wide")
 
 def inject_css():
     try:
@@ -113,23 +116,92 @@ def inject_css():
         pass
 inject_css()
 
-st.markdown("<h1 class='main-header'>🤖 Welldoc FAQ AI Assistant</h1>", unsafe_allow_html=True)
-st.write("Ask any question based on the uploaded Welldoc documents.")
+st.markdown("<h1 class='main-header'>🤖 QueryDocs AI Assistant</h1>", unsafe_allow_html=True)
+st.write("Ask questions grounded strictly in your documents.")
 
-user_query = st.text_input("Enter your question:")
+mode = st.radio("Source", ["📁 Demo FAQ", "📤 My Documents"], horizontal=True)
 
-if st.button("Ask"):
+active_collection = None
 
-    if user_query.strip() == "":
-        st.warning("Please enter a question.")
+if mode == "📁 Demo FAQ":
+    active_collection = demo_collection
+    st.caption("Answers are grounded in the bundled sample FAQ document.")
+
+else:
+    if "user_client" not in st.session_state:
+        st.session_state.user_client = chromadb.EphemeralClient()
+        st.session_state.user_collection = st.session_state.user_client.get_or_create_collection(name="user_docs")
+        st.session_state.user_doc_names = set()
+        st.session_state.user_chunk_id = 0
+
+    st.caption("Uploaded documents stay in memory for this browser session only, are never written to disk, and are not visible to other users.")
+
+    uploaded_files = st.file_uploader("Upload PDF documents", type=["pdf"], accept_multiple_files=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        process_clicked = st.button("Process documents")
+    with col2:
+        clear_clicked = st.button("Clear my documents")
+
+    if clear_clicked:
+        st.session_state.user_client = chromadb.EphemeralClient()
+        st.session_state.user_collection = st.session_state.user_client.get_or_create_collection(name="user_docs")
+        st.session_state.user_doc_names = set()
+        st.session_state.user_chunk_id = 0
+        st.success("Cleared. Upload new documents to start again.")
+
+    if process_clicked:
+        new_files = [f for f in (uploaded_files or []) if f.name not in st.session_state.user_doc_names]
+
+        if not new_files:
+            st.warning("No new PDFs to process. Upload a file first — already-processed files are skipped.")
+        else:
+            with st.spinner(f"Processing {len(new_files)} document(s)..."):
+
+                pages = []
+                for f in new_files:
+                    pages.extend(extract_pages_from_file(f, f.name))
+                    st.session_state.user_doc_names.add(f.name)
+
+                chunks = semantic_chunk(pages)
+
+                for chunk in chunks:
+                    embedding = embed_model.encode(chunk["text"]).tolist()
+                    st.session_state.user_collection.add(
+                        ids=[str(st.session_state.user_chunk_id)],
+                        documents=[chunk["text"]],
+                        embeddings=[embedding],
+                        metadatas=[{"file": chunk["file"], "page": chunk["page"]}]
+                    )
+                    st.session_state.user_chunk_id += 1
+
+            st.success(f"Processed {len(new_files)} document(s) — {len(chunks)} chunks indexed.")
+
+    if st.session_state.user_doc_names:
+        st.write("**Indexed documents:** " + ", ".join(sorted(st.session_state.user_doc_names)))
+
+    if st.session_state.user_collection.count() > 0:
+        active_collection = st.session_state.user_collection
     else:
-        with st.spinner("Thinking..."):
+        st.info("Upload and process at least one PDF to start asking questions.")
 
-            answer, sources = ask_question(user_query)
+if active_collection is not None:
 
-        st.markdown("<h2 class='sub-header'>📌 Answer</h2>", unsafe_allow_html=True)
-        st.info(answer)
+    user_query = st.text_input("Enter your question:")
 
-        st.markdown("<h2 class='sub-header'>📚 Sources</h2>", unsafe_allow_html=True)
-        for src in sources:
-            st.markdown(f"<div class='card'><span class='source-text'>- {src}</span></div>", unsafe_allow_html=True)
+    if st.button("Ask"):
+
+        if user_query.strip() == "":
+            st.warning("Please enter a question.")
+        else:
+            with st.spinner("Thinking..."):
+
+                answer, sources = ask_question(user_query, active_collection)
+
+            st.markdown("<h2 class='sub-header'>📌 Answer</h2>", unsafe_allow_html=True)
+            st.info(answer)
+
+            st.markdown("<h2 class='sub-header'>📚 Sources</h2>", unsafe_allow_html=True)
+            for src in sources:
+                st.markdown(f"<div class='card'><span class='source-text'>- {src}</span></div>", unsafe_allow_html=True)
