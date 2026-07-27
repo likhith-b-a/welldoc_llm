@@ -30,9 +30,19 @@ demo_collection = demo_client.get_collection(name="demo_docs")
 # ------------------------------
 # Hybrid keyword score
 # ------------------------------
+STOPWORDS = {
+    "a", "an", "the", "is", "are", "was", "were", "be", "been", "being",
+    "of", "in", "on", "at", "to", "for", "and", "or", "but", "with",
+    "this", "that", "these", "those", "it", "its", "as", "by", "from",
+    "has", "have", "had", "not", "can", "will", "would", "should", "could",
+    "do", "does", "did", "if", "than", "then", "so", "such", "i", "you",
+    "he", "she", "they", "we", "my", "your", "his", "her", "their", "our",
+    "what", "which", "who", "whom", "when", "where", "why", "how", "about",
+}
+
 def keyword_score(query, document):
-    query_words = set(query.lower().split())
-    doc_words = set(document.lower().split())
+    query_words = set(query.lower().split()) - STOPWORDS
+    doc_words = set(document.lower().split()) - STOPWORDS
     return len(query_words.intersection(doc_words))
 
 # ------------------------------
@@ -40,7 +50,7 @@ def keyword_score(query, document):
 # ------------------------------
 def ask_question(query, collection):
 
-    n_results = min(10, collection.count())
+    n_results = min(30, collection.count())
     query_embedding = embed_model.encode(query).tolist()
 
     results = collection.query(
@@ -67,7 +77,7 @@ def ask_question(query, collection):
         })
 
     hybrid_results.sort(key=lambda x: x["score"], reverse=True)
-    top_chunks = hybrid_results[:3]
+    top_chunks = hybrid_results[:6]
 
     context = ""
     sources = []
@@ -82,10 +92,11 @@ def ask_question(query, collection):
 You are a document assistant.
 
 Rules:
-- Answer ONLY from provided context.
-- If answer not found, say:
+- Base your answer only on the provided context — do not use outside knowledge.
+- You may combine and summarize information from multiple parts of the context to answer the question, even if no single sentence states the answer directly.
+- If the context genuinely does not contain enough information to answer, say:
   "I could not find this in the provided documents."
-- Provide clear and concise answer.
+- Provide a clear and concise answer.
 
 Context:
 {context}
