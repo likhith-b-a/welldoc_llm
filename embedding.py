@@ -1,5 +1,18 @@
 import chromadb
-import ollama
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+if "GEMINI_API_KEY" in os.environ:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+else:
+    try:
+        import streamlit as st
+        if "GEMINI_API_KEY" in st.secrets:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    except Exception:
+        pass
 
 
 client = chromadb.PersistentClient(path="./chroma_db")
@@ -12,10 +25,12 @@ def store_chunks(chunks):
 
     for i, chunk in enumerate(chunks):
 
-        embedding = ollama.embeddings(
-            model="nomic-embed-text",
-            prompt=chunk["text"]
-        )["embedding"]
+        result = genai.embed_content(
+            model="models/text-embedding-004",
+            content=chunk["text"],
+            task_type="retrieval_document"
+        )
+        embedding = result['embedding']
 
         collection.add(
             ids=[str(i)],

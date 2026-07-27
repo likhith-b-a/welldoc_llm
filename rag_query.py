@@ -1,5 +1,11 @@
 import chromadb
-import ollama
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+if "GEMINI_API_KEY" in os.environ:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
 client = chromadb.PersistentClient(path="./chroma_db")
 collection = client.get_collection(name="welldoc_docs")
@@ -18,6 +24,8 @@ def rerank_chunks(query, documents, metadatas):
 
     scored_chunks = []
 
+    model = genai.GenerativeModel('gemini-1.5-flash')
+
     for i in range(len(documents)):
 
         scoring_prompt = f"""
@@ -33,12 +41,9 @@ On a scale of 0 to 10, how relevant is this document to the query?
 Respond with ONLY a number.
 """
 
-        response = ollama.generate(
-            model="llama2:7b",
-            prompt=scoring_prompt
-        )
+        response = model.generate_content(scoring_prompt)
 
-        score_text = response["response"].strip()
+        score_text = response.text.strip()
 
         try:
             score = float(score_text)
@@ -62,10 +67,12 @@ def ask_question(query):
     print(f"\nUser Query: {query}")
 
     # Step 1 — Embed query
-    query_embedding = ollama.embeddings(
-        model="nomic-embed-text",
-        prompt=query
-    )["embedding"]
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=query,
+        task_type="retrieval_query"
+    )
+    query_embedding = result['embedding']
 
     # Step 2 — Retrieve semantic candidates
     results = collection.query(
@@ -136,13 +143,11 @@ Question:
 Answer:
 """
 
-    response = ollama.generate(
-        model="llama2:7b",
-        prompt=prompt
-    )
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(prompt)
 
     print("\n===== ANSWER =====\n")
-    print(response["response"])
+    print(response.text)
 
     print("\n===== SOURCES =====\n")
     for src in set(sources):

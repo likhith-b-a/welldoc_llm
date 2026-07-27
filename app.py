@@ -1,6 +1,18 @@
 import streamlit as st
 import chromadb
-import ollama
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+if "GEMINI_API_KEY" in os.environ:
+    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
+else:
+    try:
+        if "GEMINI_API_KEY" in st.secrets:
+            genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    except Exception:
+        pass
 
 # ------------------------------
 # Connect to ChromaDB
@@ -21,10 +33,12 @@ def keyword_score(query, document):
 # ------------------------------
 def ask_question(query):
 
-    query_embedding = ollama.embeddings(
-        model="nomic-embed-text",
-        prompt=query
-    )["embedding"]
+    result = genai.embed_content(
+        model="models/text-embedding-004",
+        content=query,
+        task_type="retrieval_query"
+    )
+    query_embedding = result['embedding']
 
     results = collection.query(
         query_embeddings=[query_embedding],
@@ -79,12 +93,11 @@ Question:
 Answer:
 """
 
-    response = ollama.generate(
-        model="llama2:7b",
-        prompt=prompt
-    )
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    response = model.generate_content(prompt)
 
-    return response["response"], list(set(sources))
+    return response.text, list(set(sources))
+
 
 
 # ------------------------------
