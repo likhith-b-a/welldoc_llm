@@ -107,7 +107,7 @@ Question:
 Answer:
 """
 
-    model = genai.GenerativeModel('gemini-2.5-flash')
+    model = genai.GenerativeModel('gemini-flash-latest')
     response = model.generate_content(prompt)
 
     return response.text, list(set(sources))
