@@ -131,7 +131,6 @@ mode = st.segmented_control(
     MODES,
     format_func=lambda m: f"{MODE_ICONS[m]} {m}",
     default="Demo FAQ",
-    required=True,
     label_visibility="collapsed",
 )
 
